@@ -1,25 +1,60 @@
-import logo from './logo.svg';
-import './App.css';
+import './App.css'
+import { useEffect } from 'react'
+import { auth, firestore } from './firebase/config'
+import { BrowserRouter, Route } from 'react-router-dom'
+import Home from './components/Home'
+import Navbar from './components/nav/Navbar'
+import SignUp from './components/auth/SignUp'
+import Login from './components/auth/Login'
+import { connect } from 'react-redux'
 
-function App() {
+
+function App(props) {
+
+  const {dispatch} = props;
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+        if(user){
+          firestore.collection('users').doc(user.uid).get()
+            .then(userFirestoreRes => {
+              const userFirestore = userFirestoreRes.data();
+              dispatch(user, userFirestore);
+              sessionStorage.setItem('user', JSON.stringify(user));
+              sessionStorage.setItem('userFirestore', JSON.stringify(userFirestore));
+            })
+        }else{ 
+          dispatch(null, null);
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('userFirestore');
+        }
+    });
+  }, [dispatch])
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <BrowserRouter>
+        <Navbar/>
+        <Route exact path='/' component={Home}/>
+        <Route path='/signup' component={SignUp}/>
+        <Route path='/login' component={Login}/>
+      </BrowserRouter>
     </div>
   );
 }
 
-export default App;
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch: (user, userFirestore) => {
+        dispatch({
+            type: 'AUTH_STATE_CHANGED',
+            payload: {
+              user,
+              userFirestore
+            }
+        })
+    }
+  }
+}
+
+export default connect(null, mapDispatchToProps)(App);
