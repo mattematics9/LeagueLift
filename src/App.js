@@ -1,46 +1,79 @@
 import './App.css'
 import { useEffect } from 'react'
 import { auth, firestore } from './firebase/config'
-import { BrowserRouter, Route } from 'react-router-dom'
+import { BrowserRouter, Redirect, Route } from 'react-router-dom'
 import Home from './components/Home'
 import Navbar from './components/nav/Navbar'
 import SignUp from './components/auth/SignUp'
 import Login from './components/auth/Login'
+import EmailVerification from './components/auth/EmailVerification'
+import PasswordReset from './components/auth/PasswordReset'
 import { connect } from 'react-redux'
 
 
-function App(props) {
+function App({dispatch, currentUser}) {
 
-  const {dispatch} = props;
+  console.log(currentUser);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
         if(user){
-          firestore.collection('users').doc(user.uid).get()
-            .then(userFirestoreRes => {
-              const userFirestore = userFirestoreRes.data();
-              dispatch(user, userFirestore);
-              sessionStorage.setItem('user', JSON.stringify(user));
-              sessionStorage.setItem('userFirestore', JSON.stringify(userFirestore));
-            })
+          // setTimeout(() => {
+            firestore.collection('users').doc(user.uid).get()
+              .then(userFirestoreRes => {
+                const userFirestore = userFirestoreRes.data();
+                dispatch(user, userFirestore);
+              })
+          // }, 600);
         }else{ 
           dispatch(null, null);
-          sessionStorage.removeItem('user');
-          sessionStorage.removeItem('userFirestore');
         }
     });
-  }, [dispatch])
+  },[dispatch])
+
+  let routes;
+
+  if (currentUser.user && currentUser.user.emailVerified){
+    routes = (
+      <>
+        <Route exact path='/' component={Home}/>
+        <Route path='/email-verification' component={EmailVerification}/>
+      </>
+    )
+
+  } else if (currentUser.user && !currentUser.user.emailVerified){
+    routes = (
+      <>
+        <Route path='/email-verification' component={EmailVerification}/>
+        <Redirect to='/email-verification'/>
+      </>
+    )
+
+  } else if (!currentUser.user){
+    routes = (
+      <>
+        <Route exact path='/' component={Home}/>
+        <Route path='/signup' component={SignUp}/>
+        <Route path='/login' component={Login}/>
+        <Route path='/password-reset' component={PasswordReset}/>
+      </>
+    )
+  }
 
   return (
     <div className="App">
       <BrowserRouter>
         <Navbar/>
-        <Route exact path='/' component={Home}/>
-        <Route path='/signup' component={SignUp}/>
-        <Route path='/login' component={Login}/>
+        {routes}
       </BrowserRouter>
     </div>
   );
+}
+
+const mapStateToprops = (state) => {
+  return {
+    currentUser: state.currentUser
+  }
 }
 
 const mapDispatchToProps = (dispatch) => {
@@ -57,4 +90,4 @@ const mapDispatchToProps = (dispatch) => {
   }
 }
 
-export default connect(null, mapDispatchToProps)(App);
+export default connect(mapStateToprops, mapDispatchToProps)(App);
