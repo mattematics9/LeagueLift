@@ -1,6 +1,4 @@
 import './App.css'
-import { useEffect } from 'react'
-import { auth, firestore } from './firebase/config'
 import { BrowserRouter, Redirect, Route } from 'react-router-dom'
 import Home from './components/Home'
 import Navbar from './components/nav/Navbar'
@@ -11,25 +9,9 @@ import PasswordReset from './components/auth/PasswordReset'
 import { connect } from 'react-redux'
 
 
-function App({dispatch, currentUser}) {
+function App({currentUser}) {
 
   console.log(currentUser);
-
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-        if(user){
-          // setTimeout(() => {
-            firestore.collection('users').doc(user.uid).get()
-              .then(userFirestoreRes => {
-                const userFirestore = userFirestoreRes.data();
-                dispatch(user, userFirestore);
-              })
-          // }, 600);
-        }else{ 
-          dispatch(null, null);
-        }
-    });
-  },[dispatch])
 
   let routes;
 
@@ -42,6 +24,7 @@ function App({dispatch, currentUser}) {
     )
 
   } else if (currentUser.user && !currentUser.user.emailVerified){
+    console.log('whhhattt')
     routes = (
       <>
         <Route path='/email-verification' component={EmailVerification}/>
@@ -76,18 +59,4 @@ const mapStateToprops = (state) => {
   }
 }
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    dispatch: (user, userFirestore) => {
-        dispatch({
-            type: 'AUTH_STATE_CHANGED',
-            payload: {
-              user,
-              userFirestore
-            }
-        })
-    }
-  }
-}
-
-export default connect(mapStateToprops, mapDispatchToProps)(App);
+export default connect(mapStateToprops)(App);
