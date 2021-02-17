@@ -63,6 +63,7 @@ export const userLogout = () => {
                     payload: {user: null, userFirestore: null}
                 })
             })
+            .catch(error => console.log(error))
     }
 }
 

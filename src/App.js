@@ -1,4 +1,3 @@
-import './App.css'
 import { BrowserRouter, Redirect, Route } from 'react-router-dom'
 import Home from './components/Home'
 import Navbar from './components/nav/Navbar'
@@ -6,12 +5,11 @@ import SignUp from './components/auth/SignUp'
 import Login from './components/auth/Login'
 import EmailVerification from './components/auth/EmailVerification'
 import PasswordReset from './components/auth/PasswordReset'
+import CreateTeam from './components/createTeam/CreateTeam'
 import { connect } from 'react-redux'
 
 
 function App({currentUser}) {
-
-  console.log(currentUser);
 
   let routes;
 
@@ -20,6 +18,7 @@ function App({currentUser}) {
       <>
         <Route exact path='/' component={Home}/>
         <Route path='/email-verification' component={EmailVerification}/>
+        <Route exact path='/create-team' component={CreateTeam}/>
       </>
     )
 
@@ -42,6 +41,8 @@ function App({currentUser}) {
       </>
     )
   }
+
+
 
   return (
     <div className="App">
